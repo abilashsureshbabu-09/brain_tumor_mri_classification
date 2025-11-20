@@ -1,0 +1,30 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run train.py (Terminal)",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/train.py",
+      "console": "integratedTerminal",
+      "args": [
+        "--data_dir",
+        "data",
+        "--model",
+        "efficientnet",
+        "--epochs",
+        "2"
+      ]
+    },
+    {
+      "name": "Execute Notebook (nbconvert)",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/run_notebook_locally.py",
+      "console": "integratedTerminal",
+      "args": [
+        "EDA_and_Training_Example.ipynb"
+      ]
+    }
+  ]
+}

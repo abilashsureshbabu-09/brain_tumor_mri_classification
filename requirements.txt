@@ -1,0 +1,11 @@
+tensorflow>=2.11
+numpy
+pandas
+matplotlib
+scikit-learn
+pillow
+streamlit
+opencv-python
+efficientnet
+nbformat
+nbconvert

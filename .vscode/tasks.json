@@ -1,0 +1,17 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Install dependencies",
+      "type": "shell",
+      "command": "pip install -r requirements.txt",
+      "problemMatcher": []
+    },
+    {
+      "label": "Run train.py (short)",
+      "type": "shell",
+      "command": "python train.py --data_dir data --model efficientnet --epochs 2 --batch_size 8",
+      "problemMatcher": []
+    }
+  ]
+}

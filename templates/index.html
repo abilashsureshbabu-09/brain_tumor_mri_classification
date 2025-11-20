@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brain Tumor MRI Classifier</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9ff;
+        }
+        
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: #f0f2ff;
+        }
+        
+        .upload-area.dragover {
+            border-color: #764ba2;
+            background: #e8ebff;
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        
+        .upload-text {
+            color: #333;
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+        
+        .upload-subtext {
+            color: #999;
+            font-size: 13px;
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+        
+        .image-preview {
+            margin-top: 30px;
+            display: none;
+        }
+        
+        .image-preview img {
+            max-width: 100%;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .results {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f0f2ff;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .prediction-main {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 5px solid #667eea;
+        }
+        
+        .prediction-label {
+            color: #999;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        
+        .prediction-value {
+            color: #333;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .confidence-label {
+            color: #666;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+        
+        .confidence-bar {
+            background: #e0e0e0;
+            height: 8px;
+            border-radius: 4px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        .all-predictions {
+            margin-top: 15px;
+        }
+        
+        .pred-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .pred-item:last-child {
+            border-bottom: none;
+        }
+        
+        .pred-name {
+            color: #666;
+            font-size: 13px;
+        }
+        
+        .pred-score {
+            color: #333;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .pred-bar {
+            flex-grow: 1;
+            height: 4px;
+            background: #e0e0e0;
+            margin: 0 10px;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .pred-bar-fill {
+            height: 100%;
+            background: #667eea;
+            border-radius: 2px;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-upload {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-upload:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-reset {
+            background: #f0f2ff;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+        
+        .btn-reset:hover {
+            background: #e8ebff;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            color: #666;
+            margin-top: 10px;
+            font-size: 13px;
+        }
+        
+        .error {
+            background: #ffe0e0;
+            color: #c33;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+            border-left: 4px solid #c33;
+        }
+        
+        .status {
+            font-size: 12px;
+            color: #999;
+            margin-top: 15px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 Brain Tumor Classifier</h1>
+        <p class="subtitle">Upload an MRI image to classify brain tumors</p>
+        
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📸</div>
+            <div class="upload-text">Click to upload or drag & drop</div>
+            <div class="upload-subtext">PNG, JPG, JPEG (Max 16MB)</div>
+            <input type="file" id="imageInput" accept="image/*">
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <div class="loading-text">Analyzing image...</div>
+        </div>
+        
+        <div class="error" id="error"></div>
+        
+        <div class="image-preview" id="imagePreview">
+            <img id="previewImage" src="" alt="Preview">
+            <div class="results" id="results">
+                <div class="prediction-main">
+                    <div class="prediction-label">Prediction</div>
+                    <div class="prediction-value" id="predictionValue">-</div>
+                    <div class="confidence-label">Confidence</div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" id="confidenceFill" style="width: 0%"></div>
+                    </div>
+                    <div class="confidence-label" id="confidencePercent" style="margin-top: 8px;">0%</div>
+                </div>
+                
+                <div class="all-predictions" id="allPredictions"></div>
+            </div>
+            
+            <div class="button-group">
+                <button class="btn-upload" onclick="document.getElementById('imageInput').click()">Upload Another</button>
+                <button class="btn-reset" onclick="resetForm()">Reset</button>
+            </div>
+        </div>
+        
+        <div class="status" id="status">Ready to classify</div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const imageInput = document.getElementById('imageInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImage = document.getElementById('previewImage');
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const status = document.getElementById('status');
+        const results = document.getElementById('results');
+
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                imageInput.files = files;
+                handleImageSelect();
+            }
+        });
+
+        // Click to upload
+        uploadArea.addEventListener('click', () => {
+            imageInput.click();
+        });
+
+        imageInput.addEventListener('change', handleImageSelect);
+
+        function handleImageSelect() {
+            const file = imageInput.files[0];
+            if (!file) return;
+
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                showError('Please select a valid image file');
+                return;
+            }
+
+            // Read and display image
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImage.src = e.target.result;
+                imagePreview.style.display = 'block';
+                uploadArea.style.display = 'none';
+                results.style.display = 'none';
+                error.style.display = 'none';
+                
+                // Make prediction
+                makePrediction(file);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function makePrediction(file) {
+            loading.style.display = 'block';
+            error.style.display = 'none';
+            status.textContent = 'Analyzing...';
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            fetch('/predict', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                loading.style.display = 'none';
+                
+                if (data.success) {
+                    displayResults(data);
+                    status.textContent = `✓ Classified as: ${data.prediction}`;
+                } else {
+                    showError(data.error || 'Prediction failed');
+                }
+            })
+            .catch(err => {
+                loading.style.display = 'none';
+                showError('Error: ' + err.message);
+            });
+        }
+
+        function displayResults(data) {
+            document.getElementById('predictionValue').textContent = data.prediction.toUpperCase();
+            
+            const confidence = (data.confidence * 100).toFixed(1);
+            document.getElementById('confidenceFill').style.width = confidence + '%';
+            document.getElementById('confidencePercent').textContent = confidence + '%';
+
+            // Display all predictions
+            const allPreds = document.getElementById('allPredictions');
+            allPreds.innerHTML = '';
+            
+            Object.entries(data.all_predictions).forEach(([name, score]) => {
+                const percentage = (score * 100).toFixed(1);
+                const html = `
+                    <div class="pred-item">
+                        <span class="pred-name">${name.charAt(0).toUpperCase() + name.slice(1)}</span>
+                        <div class="pred-bar">
+                            <div class="pred-bar-fill" style="width: ${percentage}%"></div>
+                        </div>
+                        <span class="pred-score">${percentage}%</span>
+                    </div>
+                `;
+                allPreds.innerHTML += html;
+            });
+
+            results.style.display = 'block';
+        }
+
+        function showError(message) {
+            error.style.display = 'block';
+            error.textContent = message;
+            status.textContent = 'Error occurred';
+        }
+
+        function resetForm() {
+            imageInput.value = '';
+            imagePreview.style.display = 'none';
+            uploadArea.style.display = 'block';
+            results.style.display = 'none';
+            error.style.display = 'none';
+            loading.style.display = 'none';
+            status.textContent = 'Ready to classify';
+        }
+
+        // Check status on load
+        window.addEventListener('load', () => {
+            fetch('/status')
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.model_loaded) {
+                        status.textContent = '⚠ Model not loaded. Please train the model first.';
+                        uploadArea.style.pointerEvents = 'none';
+                        uploadArea.style.opacity = '0.5';
+                    }
+                })
+                .catch(err => console.log('Status check failed:', err));
+        });
+    </script>
+</body>
+</html>
